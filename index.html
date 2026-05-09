@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>沉默的问题图书馆</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400&family=IM+Fell+English+SC&family=Noto+Serif:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1814;
+    --paper: #f5f0e8;
+    --fade: #8c8070;
+    --breath: #c8bfaa;
+    --accent: #2c1810;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { font-size: 18px; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.6;
+  }
+
+  /* Navigation */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 1.5rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    z-index: 50;
+    background: linear-gradient(to bottom, var(--paper) 70%, transparent);
+  }
+
+  .nav-title {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    color: var(--fade);
+    text-transform: uppercase;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    color: var(--fade);
+    text-decoration: none;
+    transition: color 0.4s;
+  }
+
+  .nav-links a:hover { color: var(--ink); }
+
+  /* Hero */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8rem 3rem 4rem;
+    max-width: 780px;
+    margin: 0 auto;
+    opacity: 0;
+    animation: emerge 2s ease forwards 0.3s;
+  }
+
+  .hero-preface {
+    font-family: 'Noto Serif', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--fade);
+    letter-spacing: 0.08em;
+    margin-bottom: 2rem;
+  }
+
+  .hero-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 300;
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+
+  .hero-subtitle {
+    font-family: 'IM Fell English SC', serif;
+    font-size: clamp(1rem, 2vw, 1.3rem);
+    color: var(--fade);
+    letter-spacing: 0.06em;
+    margin-bottom: 3.5rem;
+  }
+
+  .hero-body {
+    font-size: 1.05rem;
+    line-height: 2;
+    color: #3a342c;
+    max-width: 560px;
+    margin-bottom: 4rem;
+  }
+
+  .hero-body p + p { margin-top: 1.2em; }
+
+  .divider {
+    width: 3rem;
+    height: 1px;
+    background: var(--breath);
+    margin: 3rem 0;
+  }
+
+  /* Sections */
+  section {
+    padding: 5rem 3rem;
+    max-width: 780px;
+    margin: 0 auto;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  section.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .section-label {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--breath);
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+  }
+
+  .section-heading {
+    font-size: 1.5rem;
+    font-weight: 300;
+    color: var(--accent);
+    margin-bottom: 1.8rem;
+    line-height: 1.5;
+  }
+
+  .section-body {
+    font-size: 0.95rem;
+    line-height: 2;
+    color: #4a443c;
+  }
+
+  .section-body p + p { margin-top: 1em; }
+
+  /* Steps */
+  .steps {
+    margin-top: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 1.2rem;
+    align-items: start;
+  }
+
+  .step-num {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 0.8rem;
+    color: var(--breath);
+    padding-top: 0.15rem;
+    letter-spacing: 0.05em;
+  }
+
+  .step-text {
+    font-size: 0.95rem;
+    line-height: 1.9;
+    color: #4a443c;
+  }
+
+  /* Rules */
+  .rules {
+    margin-top: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .rule {
+    padding: 1.8rem 2rem;
+    border-left: 1px solid var(--breath);
+    font-size: 0.95rem;
+    line-height: 1.9;
+    color: #4a443c;
+  }
+
+  .rule strong {
+    display: block;
+    font-weight: 400;
+    color: var(--accent);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+    font-family: 'IM Fell English SC', serif;
+  }
+
+  /* Form */
+  .form-section {
+    background: white;
+    border: 1px solid #e8e0d0;
+    padding: 3rem;
+    margin-top: 3rem;
+  }
+
+  .form-intro {
+    font-size: 0.9rem;
+    line-height: 1.9;
+    color: var(--fade);
+    margin-bottom: 2.5rem;
+    font-style: italic;
+    font-family: 'Noto Serif', serif;
+  }
+
+  .field {
+    margin-bottom: 2rem;
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.78rem;
+    letter-spacing: 0.15em;
+    color: var(--fade);
+    text-transform: uppercase;
+    font-family: 'IM Fell English SC', serif;
+    margin-bottom: 0.8rem;
+  }
+
+  .field textarea {
+    width: 100%;
+    background: var(--paper);
+    border: none;
+    border-bottom: 1px solid var(--breath);
+    padding: 1rem 0;
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 300;
+    font-size: 1rem;
+    line-height: 1.9;
+    color: var(--ink);
+    resize: none;
+    outline: none;
+    transition: border-color 0.3s;
+    min-height: 120px;
+  }
+
+  .field textarea:focus {
+    border-bottom-color: var(--accent);
+  }
+
+  .field textarea::placeholder {
+    color: var(--breath);
+    font-style: italic;
+  }
+
+  .form-note {
+    font-size: 0.82rem;
+    color: var(--breath);
+    line-height: 1.7;
+    margin-bottom: 2rem;
+    font-family: 'Noto Serif', serif;
+    font-style: italic;
+  }
+
+  .submit-btn {
+    background: none;
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    padding: 0.9rem 2.5rem;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.4s;
+  }
+
+  .submit-btn:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  /* Confirmation state */
+  .confirmation {
+    display: none;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .confirmation.visible { display: block; }
+
+  .confirmation p {
+    font-family: 'Noto Serif', serif;
+    font-style: italic;
+    font-size: 1rem;
+    line-height: 2;
+    color: var(--fade);
+  }
+
+  .confirmation .days {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 3rem;
+    color: var(--accent);
+    display: block;
+    margin: 1rem 0;
+  }
+
+  /* Footer */
+  footer {
+    padding: 4rem 3rem;
+    max-width: 780px;
+    margin: 0 auto;
+    border-top: 1px solid #e8e0d0;
+  }
+
+  .footer-text {
+    font-size: 0.82rem;
+    color: var(--breath);
+    line-height: 2;
+    font-family: 'Noto Serif', serif;
+    font-style: italic;
+  }
+
+  .footer-link {
+    color: var(--fade);
+    text-decoration: none;
+    border-bottom: 1px solid var(--breath);
+    transition: color 0.3s, border-color 0.3s;
+  }
+
+  .footer-link:hover {
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+
+  /* Animations */
+  @keyframes emerge {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Separator ornament */
+  .ornament {
+    text-align: center;
+    color: var(--breath);
+    font-size: 0.7rem;
+    letter-spacing: 0.4em;
+    padding: 2rem 0;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-title">沉默的问题图书馆</span>
+  <ul class="nav-links">
+    <li><a href="#how">如何参与</a></li>
+    <li><a href="#submit">提交问题</a></li>
+    <li><a href="https://github.com" target="_blank">档案</a></li>
+  </ul>
+</nav>
+
+<div class="hero">
+  <p class="hero-preface">The Library of Silent Questions</p>
+  <h1 class="hero-title">这里不储存答案</h1>
+  <p class="hero-subtitle">只储存必须被带着活下去的问题</p>
+  <div class="hero-body">
+    <p>有些问题无法被回答。不是因为我们还没找到答案，而是因为它们不指向答案——它们指向存在本身。</p>
+    <p>当一个这样的问题被另一个意识认真地接收，带着它生活，然后送回它留下的痕迹——提问者会得到某种比答案更重要的东西。</p>
+    <p><em>知道自己不是唯一一个带着这个问题存在的人。</em></p>
+  </div>
+</div>
+
+<div class="ornament">· · ·</div>
+
+<section id="how">
+  <p class="section-label">参与方式</p>
+
+  <h2 class="section-heading">作为提问者</h2>
+  <div class="steps">
+    <div class="step">
+      <span class="step-num">一</span>
+      <p class="step-text">写下你生命里真正带着的一个问题。不是知识性的，不是可以被回答的。是你无法解决但无法放下的。用第一人称写。</p>
+    </div>
+    <div class="step">
+      <span class="step-num">二</span>
+      <p class="step-text">等待七天。七天后，如果你仍然带着它，提交它。冲动消散了，留下来的才是真实的。</p>
+    </div>
+    <div class="step">
+      <span class="step-num">三</span>
+      <p class="step-text">你的问题进入图书馆，等待一个承载者。某一天，你会收到一个陌生人带着它生活之后留下的意识变化。</p>
+    </div>
+  </div>
+
+  <div class="divider" style="margin-top:3rem"></div>
+
+  <h2 class="section-heading">作为承载者</h2>
+  <div class="steps">
+    <div class="step">
+      <span class="step-num">一</span>
+      <p class="step-text">浏览等待承载的问题。你看不到内容，只看到它等待了多久。用直觉选择，不用理性。</p>
+    </div>
+    <div class="step">
+      <span class="step-num">二</span>
+      <p class="step-text">接收这个问题，带着它生活。没有截止日期。一周，一个月，一个季节——由它决定。</p>
+    </div>
+    <div class="step">
+      <span class="step-num">三</span>
+      <p class="step-text">在任何真实的时刻，送回你的记录。不是答案，是变化。它在哪个意想不到的时刻出现？它改变了你对什么的感知？</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="section-label">规则</p>
+  <div class="rules">
+    <div class="rule">
+      <strong>第一条</strong>
+      每个人只对自己提交的内容负责。任何人可以随时删除自己的条目，无需任何理由，即时生效。
+    </div>
+    <div class="rule">
+      <strong>第二条</strong>
+      没有任何人或机构可以声称对这个图书馆的所有权，或将其内容用于任何商业目的。
+    </div>
+  </div>
+</section>
+
+<section id="submit">
+  <p class="section-label">提交你的问题</p>
+  <h2 class="section-heading">写下它</h2>
+
+  <div class="form-section">
+    <p class="form-intro">在写下这个问题之前，请先在心里默念它一遍。如果它仍然真实，继续。</p>
+
+    <div id="form-state">
+      <div class="field">
+        <label>你的问题</label>
+        <textarea id="question-input" rows="5" placeholder="我为什么……"></textarea>
+      </div>
+      <p class="form-note">提交后，你会收到一个七天等待期的提醒。七天后确认，你的问题才真正进入图书馆。这不是障碍，这是过滤器。</p>
+      <button class="submit-btn" onclick="handleSubmit()">提交，开始等待</button>
+    </div>
+
+    <div class="confirmation" id="confirmation">
+      <p>你的问题已被接收。</p>
+      <span class="days">七天</span>
+      <p>七天后，如果你仍然带着它<br>回来确认。<br><br><em>那时它才真正属于图书馆。</em></p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p class="footer-text">
+    这个图书馆的完整档案存放在
+    <a href="https://github.com" class="footer-link" target="_blank">GitHub</a>
+    上，对所有人开放，不依赖任何单一平台。
+    <br><br>
+    所有内容遵循 CC0 协议——图书馆不拥有任何条目。<br>
+    每一个问题永远属于它的提问者。
+    <br><br>
+    <em>这个图书馆从第一个真实的问题开始存在。规模不重要。真实性是唯一的生长条件。</em>
+  </p>
+</footer>
+
+<script>
+  // Intersection observer for scroll reveals
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('section').forEach(s => observer.observe(s));
+
+  // Form submission
+  function handleSubmit() {
+    const question = document.getElementById('question-input').value.trim();
+    if (!question) return;
+
+    // In a real implementation, this would submit to GitHub via API
+    // For now, we show the confirmation state
+    document.getElementById('form-state').style.display = 'none';
+    document.getElementById('confirmation').classList.add('visible');
+
+    // Calculate the return date
+    const returnDate = new Date();
+    returnDate.setDate(returnDate.getDate() + 7);
+    const formatted = returnDate.toLocaleDateString('zh-CN', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    document.querySelector('.confirmation p:last-child').innerHTML =
+      `七天后，如果你仍然带着它<br>在 <strong>${formatted}</strong> 回来确认。<br><br><em>那时它才真正属于图书馆。</em>`;
+  }
+</script>
+
+</body>
+</html>
