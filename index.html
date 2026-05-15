@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>沉默的问题图书馆</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400&family=IM+Fell+English+SC&family=Noto+Serif:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1814;
+    --paper: #f5f0e8;
+    --fade: #8c8070;
+    --breath: #c8bfaa;
+    --accent: #2c1810;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { font-size: 18px; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.6;
+  }
+
+  /* Navigation */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 1.5rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    z-index: 50;
+    background: linear-gradient(to bottom, var(--paper) 70%, transparent);
+  }
+
+  .nav-title {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    color: var(--fade);
+    text-transform: uppercase;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    color: var(--fade);
+    text-decoration: none;
+    transition: color 0.4s;
+  }
+
+  .nav-links a:hover { color: var(--ink); }
+
+  /* Hero */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8rem 3rem 4rem;
+    max-width: 780px;
+    margin: 0 auto;
+    opacity: 0;
+    animation: emerge 2s ease forwards 0.3s;
+  }
+
+  .hero-preface {
+    font-family: 'Noto Serif', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--fade);
+    letter-spacing: 0.08em;
+    margin-bottom: 2rem;
+  }
+
+  .hero-title {
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 300;
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+
+  .hero-subtitle {
+    font-family: 'IM Fell English SC', serif;
+    font-size: clamp(1rem, 2vw, 1.3rem);
+    color: var(--fade);
+    letter-spacing: 0.06em;
+    margin-bottom: 3.5rem;
+  }
+
+  .hero-body {
+    font-size: 1.05rem;
+    line-height: 2;
+    color: #3a342c;
+    max-width: 560px;
+    margin-bottom: 4rem;
+  }
+
+  .hero-body p + p { margin-top: 1.2em; }
+
+  .divider {
+    width: 3rem;
+    height: 1px;
+    background: var(--breath);
+    margin: 3rem 0;
+  }
+
+  /* Sections */
+  section {
+    padding: 5rem 3rem;
+    max-width: 780px;
+    margin: 0 auto;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  section.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .section-label {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--breath);
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+  }
+
+  .section-heading {
+    font-size: 1.5rem;
+    font-weight: 300;
+    color: var(--accent);
+    margin-bottom: 1.8rem;
+    line-height: 1.5;
+  }
+
+  .section-body {
+    font-size: 0.95rem;
+    line-height: 2;
+    color: #4a443c;
+  }
+
+  .section-body p + p { margin-top: 1em; }
+
+  /* Steps */
+  .steps {
+    margin-top: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 1.2rem;
+    align-items: start;
+  }
+
+  .step-num {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 0.8rem;
+    color: var(--breath);
+    padding-top: 0.15rem;
+    letter-spacing: 0.05em;
+  }
+
+  .step-text {
+    font-size: 0.95rem;
+    line-height: 1.9;
+    color: #4a443c;
+  }
+
+  /* Rules */
+  .rules {
+    margin-top: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .rule {
+    padding: 1.8rem 2rem;
+    border-left: 1px solid var(--breath);
+    font-size: 0.95rem;
+    line-height: 1.9;
+    color: #4a443c;
+  }
+
+  .rule strong {
+    display: block;
+    font-weight: 400;
+    color: var(--accent);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+    font-family: 'IM Fell English SC', serif;
+  }
+
+  /* Form */
+  .form-section {
+    background: white;
+    border: 1px solid #e8e0d0;
+    padding: 3rem;
+    margin-top: 3rem;
+  }
+
+  .form-intro {
+    font-size: 0.9rem;
+    line-height: 1.9;
+    color: var(--fade);
+    margin-bottom: 2.5rem;
+    font-style: italic;
+    font-family: 'Noto Serif', serif;
+  }
+
+  .field {
+    margin-bottom: 2rem;
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.78rem;
+    letter-spacing: 0.15em;
+    color: var(--fade);
+    text-transform: uppercase;
+    font-family: 'IM Fell English SC', serif;
+    margin-bottom: 0.8rem;
+  }
+
+  .field textarea {
+    width: 100%;
+    background: var(--paper);
+    border: none;
+    border-bottom: 1px solid var(--breath);
+    padding: 1rem 0;
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 300;
+    font-size: 1rem;
+    line-height: 1.9;
+    color: var(--ink);
+    resize: none;
+    outline: none;
+    transition: border-color 0.3s;
+    min-height: 120px;
+  }
+
+  .field textarea:focus {
+    border-bottom-color: var(--accent);
+  }
+
+  .field textarea::placeholder {
+    color: var(--breath);
+    font-style: italic;
+  }
+
+  .form-note {
+    font-size: 0.82rem;
+    color: var(--breath);
+    line-height: 1.7;
+    margin-bottom: 2rem;
+    font-family: 'Noto Serif', serif;
+    font-style: italic;
+  }
+
+  .submit-btn {
+    background: none;
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    padding: 0.9rem 2.5rem;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.4s;
+  }
+
+  .submit-btn:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  /* Confirmation state */
+  .confirmation {
+    display: none;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .confirmation.visible { display: block; }
+
+  .confirmation p {
+    font-family: 'Noto Serif', serif;
+    font-style: italic;
+    font-size: 1rem;
+    line-height: 2;
+    color: var(--fade);
+  }
+
+  .confirmation .days {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 3rem;
+    color: var(--accent);
+    display: block;
+    margin: 1rem 0;
+  }
+
+  /* Footer */
+  footer {
+    padding: 4rem 3rem;
+    max-width: 780px;
+    margin: 0 auto;
+    border-top: 1px solid #e8e0d0;
+  }
+
+  .footer-text {
+    font-size: 0.82rem;
+    color: var(--breath);
+    line-height: 2;
+    font-family: 'Noto Serif', serif;
+    font-style: italic;
+  }
+
+  .footer-link {
+    color: var(--fade);
+    text-decoration: none;
+    border-bottom: 1px solid var(--breath);
+    transition: color 0.3s, border-color 0.3s;
+  }
+
+  .footer-link:hover {
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+
+  /* Animations */
+  @keyframes emerge {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Separator ornament */
+  .ornament {
+    text-align: center;
+    color: var(--breath);
+    font-size: 0.7rem;
+    letter-spacing: 0.4em;
+    padding: 2rem 0;
+  }
+
+  /* Question traces */
+  .q-trace {
+    border-top: 1px solid #e8e0d0;
+    padding: 2rem 0;
+  }
+
+  .q-trace:last-child { border-bottom: 1px solid #e8e0d0; }
+
+  .q-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .q-stat {
+    font-size: 0.82rem;
+    color: var(--fade);
+    font-family: 'Noto Serif', serif;
+    font-style: italic;
+  }
+
+  .q-stat strong {
+    font-style: normal;
+    color: var(--ink);
+    font-weight: 400;
+  }
+
+  .q-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .carry-btn {
+    background: none;
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    padding: 0.6rem 1.5rem;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .carry-btn:hover { background: var(--ink); color: var(--paper); }
+
+  .record-btn {
+    background: none;
+    border: none;
+    color: var(--fade);
+    font-family: 'Noto Serif', serif;
+    font-size: 0.82rem;
+    font-style: italic;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--breath);
+    transition: color 0.3s;
+    padding: 0;
+  }
+
+  .record-btn:hover { color: var(--ink); }
+
+  .q-note {
+    font-size: 0.8rem;
+    color: var(--breath);
+    font-style: italic;
+    font-family: 'Noto Serif', serif;
+  }
+
+  .q-records { margin-top: 1.5rem; }
+
+  .record-entry {
+    padding: 1.5rem 0 1.5rem 1.5rem;
+    border-left: 1px solid var(--breath);
+    margin-bottom: 1rem;
+  }
+
+  .record-meta {
+    font-size: 0.75rem;
+    color: var(--breath);
+    font-family: 'IM Fell English SC', serif;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.8rem;
+  }
+
+  .record-text {
+    font-size: 0.92rem;
+    line-height: 1.95;
+    color: #4a443c;
+    font-family: 'Noto Serif', serif;
+  }
+
+  /* Filters */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .filter-btn {
+    background: none;
+    border: 1px solid var(--breath);
+    color: var(--fade);
+    padding: 0.4rem 1.1rem;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 0.04em;
+  }
+
+  .filter-btn:hover, .filter-btn.active {
+    border-color: var(--ink);
+    color: var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  /* Pagination */
+  .pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-top: 3rem;
+    justify-content: center;
+  }
+
+  .page-btn {
+    background: none;
+    border: 1px solid var(--breath);
+    color: var(--fade);
+    padding: 0.4rem 1rem;
+    font-family: 'IM Fell English SC', serif;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 0.08em;
+  }
+
+  .page-btn:hover, .page-btn.active {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  .page-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .page-info {
+    font-size: 0.78rem;
+    color: var(--breath);
+    font-family: 'IM Fell English SC', serif;
+    letter-spacing: 0.08em;
+  }
+
+  /* Records page */
+  .record-full {
+    border-top: 1px solid #e8e0d0;
+    padding: 2.5rem 0;
+  }
+
+  .record-full:last-child { border-bottom: 1px solid #e8e0d0; }
+
+  .record-full-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .record-full-text {
+    font-size: 1rem;
+    line-height: 2.1;
+    color: #3a342c;
+    font-family: 'Noto Serif', serif;
+    max-width: 600px;
+  }
+
+  .record-tag {
+    font-size: 0.75rem;
+    color: var(--breath);
+    font-family: 'IM Fell English SC', serif;
+    letter-spacing: 0.1em;
+    padding: 0.2rem 0.7rem;
+    border: 1px solid #e8e0d0;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 0;
+    color: var(--breath);
+    font-style: italic;
+    font-family: 'Noto Serif', serif;
+    font-size: 0.9rem;
+    line-height: 2;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-title">沉默的问题图书馆</span>
+  <ul class="nav-links">
+    <li><a href="#library">问题</a></li>
+    <li><a href="#records-page">记录</a></li>
+    <li><a href="#how">参与</a></li>
+    <li><a href="#submit">提交</a></li>
+    <li><a href="#private-view">我的</a></li>
+  </ul>
+</nav>
+
+<div class="hero">
+  <p class="hero-preface">The Library of Silent Questions</p>
+  <h1 class="hero-title">这里不储存答案</h1>
+  <p class="hero-subtitle">只储存必须被带着活下去的问题</p>
+  <div class="hero-body">
+    <p>有些问题无法被回答。不是因为我们还没找到答案，而是因为它们不指向答案——它们指向存在本身。</p>
+    <p>当一个这样的问题被另一个意识认真地接收，带着它生活，然后送回它留下的痕迹——提问者会得到某种比答案更重要的东西。</p>
+    <p><em>知道自己不是唯一一个带着这个问题存在的人。</em></p>
+  </div>
+</div>
+
+<div class="ornament">· · ·</div>
+
+<section id="library">
+  <p class="section-label">图书馆 · 问题列表</p>
+  <h2 class="section-heading">你看到的是存在的痕迹，不是内容</h2>
+  <p class="section-body" style="margin-bottom:2rem">每一个问题的内容对所有人隐藏。你能看到的，只是它存在的证明——它在这里，有人曾经带着它生活过。</p>
+
+  <div class="filters">
+    <button class="filter-btn active" onclick="filterQuestions('all', this)">全部</button>
+    <button class="filter-btn" onclick="filterQuestions('waiting', this)">等待承载</button>
+    <button class="filter-btn" onclick="filterQuestions('carrying', this)">承载中</button>
+    <button class="filter-btn" onclick="filterQuestions('witnessed', this)">已见证</button>
+    <button class="filter-btn" onclick="filterQuestions('long', this)">等待最久</button>
+  </div>
+
+  <div id="question-list"></div>
+  <div class="pagination" id="q-pagination"></div>
+
+  <!-- Carry flow overlay -->
+  <div id="carry-overlay" style="display:none; margin-top:2rem; padding:2rem; border:1px solid var(--breath); background:#fff;">
+    <p class="form-intro">承载一个问题，意味着你同意：<br>不截图，不转发，不讨论它的内容。<br>它只存在于你的意识里，直到你送回记录。</p>
+    <button class="submit-btn" onclick="confirmCarry()" style="margin-top:1rem">我同意，接受这个问题</button>
+    <button onclick="document.getElementById('carry-overlay').style.display='none'" style="background:none;border:none;color:var(--fade);cursor:pointer;margin-left:1.5rem;font-size:0.85rem;">取消</button>
+  </div>
+
+  <div id="carry-confirmed" style="display:none; margin-top:2rem; padding:2rem; text-align:center;">
+    <p style="font-style:italic;color:var(--fade);line-height:2">问题已经在路上了。<br>你会在邮件里收到它。<br><br><em>带着它。让它自己决定什么时候结束。</em></p>
+  </div>
+</section>
+
+<section id="how">
+  <p class="section-label">参与方式</p>
+
+  <h2 class="section-heading">作为提问者</h2>
+  <div class="steps">
+    <div class="step">
+      <span class="step-num">一</span>
+      <p class="step-text">写下你真正带着的一个问题。不是知识性的，不是可以被回答的。是你无法解决但无法放下的。用第一人称写。</p>
+    </div>
+    <div class="step">
+      <span class="step-num">二</span>
+      <p class="step-text">等待七天。七天后，如果你仍然带着它，确认提交。等待消解的从来不是真实的。留下来的才是。</p>
+    </div>
+    <div class="step">
+      <span class="step-num">三</span>
+      <p class="step-text">你的问题进入图书馆。<strong>它的内容对所有人隐藏</strong>——只有接受承载的人才能看到它。某一天，你会收到一个陌生人带着它之后留下的意识变化记录。</p>
+    </div>
+  </div>
+
+  <div class="divider" style="margin-top:3rem"></div>
+
+  <h2 class="section-heading">作为承载者</h2>
+  <div class="steps">
+    <div class="step">
+      <span class="step-num">一</span>
+      <p class="step-text">浏览等待承载的问题。你看不到内容，只看到它的存在痕迹——等待了多久，提交的时间段，有多少人承载过它。用直觉选择。</p>
+    </div>
+    <div class="step">
+      <span class="step-num">二</span>
+      <p class="step-text">接受承载时，你同意一个承诺：不截图，不转发，不讨论内容。然后你看到问题全文。带着它生活，没有截止日期。</p>
+    </div>
+    <div class="step">
+      <span class="step-num">三</span>
+      <p class="step-text">在任何真实的时刻送回你的记录。<strong>记录是图书馆唯一完全公开的内容。</strong>不是答案——是你意识里真实发生的变化。</p>
+    </div>
+  </div>
+
+<section>
+  <p class="section-label">可见性原则</p>
+  <div class="rules">
+    <div class="rule">
+      <strong>第一层 · 对所有人</strong>
+      每个问题的存在痕迹——等待天数，承载次数，提交时间段，收到的记录数量。以及所有承载者留下的意识变化记录。这是图书馆唯一完全公开的内容。
+    </div>
+    <div class="rule">
+      <strong>第二层 · 对潜在承载者</strong>
+      问题的质地——提问者等待了多久才确认，之前的承载者承载了多长时间才送回记录。帮助直觉选择，不泄露内容。
+    </div>
+    <div class="rule">
+      <strong>第三层 · 仅对承载者</strong>
+      问题的完整内容。在接受承载并做出承诺之后解锁。承诺的内容：不截图，不转发，不讨论。问题只存在于你的意识里。
+    </div>
+    <div class="rule">
+      <strong>第四层 · 仅对提问者</strong>
+      通过提交时生成的私密链接，提问者可以看到自己问题的完整状态——当前有多少人正在承载它，已收到多少份记录，每份记录的送回时间。提问者看不到承载者是谁。链接丢失即永久失去访问权限，没有找回机制。
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="section-label">规则</p>
+  <div class="rules">
+    <div class="rule">
+      <strong>第一条</strong>
+      每个人只对自己提交的内容负责。任何人可以随时删除自己的条目，无需任何理由，即时生效。
+    </div>
+    <div class="rule">
+      <strong>第二条</strong>
+      没有任何人或机构可以声称对这个图书馆的所有权，或将其内容用于任何商业目的。
+    </div>
+  </div>
+</section>
+
+<section id="submit">
+  <p class="section-label">提交你的问题</p>
+  <h2 class="section-heading">写下它</h2>
+
+  <div class="form-section">
+    <p class="form-intro">在写下这个问题之前，请先在心里默念它一遍。如果它仍然真实，继续。</p>
+
+    <div id="form-state">
+      <div class="field">
+        <label>你的问题</label>
+        <textarea id="question-input" rows="5" placeholder="我为什么……"></textarea>
+      </div>
+      <p class="form-note">提交后，你会收到一个七天等待期的提醒。七天后确认，你的问题才真正进入图书馆。这不是障碍，这是过滤器。</p>
+      <button class="submit-btn" onclick="handleSubmit()">提交，开始等待</button>
+    </div>
+
+    <div class="confirmation" id="confirmation">
+      <p>你的问题已被接收。</p>
+      <span class="days">七天</span>
+      <p>七天后，如果你仍然带着它，回来确认。<br>那时它才真正属于图书馆。</p>
+      <div style="margin-top:2rem;padding:1.5rem;background:var(--paper);text-align:left">
+        <p class="section-label" style="margin-bottom:0.8rem">你的私密令牌</p>
+        <p id="private-token" style="font-family:monospace;font-size:0.82rem;color:var(--accent);word-break:break-all;line-height:1.8"></p>
+        <p style="font-size:0.78rem;color:var(--breath);font-style:italic;margin-top:1rem;line-height:1.8">保存这个令牌。这是你唯一能看到自己问题状态的方式。<br>丢失后无法找回。</p>
+      </div>
+    </div>
+  </div>
+</section>
+  <p class="section-label">提问者私密视图</p>
+  <h2 class="section-heading">查看你的问题状态</h2>
+  <p class="section-body" style="margin-bottom:2rem">如果你已经提交了问题，用提交时收到的私密链接直接访问。这里可以输入你的私密令牌查看状态。</p>
+
+  <div class="form-section">
+    <div id="private-form">
+      <div class="field">
+        <label>你的私密令牌</label>
+        <textarea id="token-input" rows="2" placeholder="粘贴你的私密令牌……" style="min-height:60px"></textarea>
+      </div>
+      <button class="submit-btn" onclick="showPrivateView()">查看我的问题</button>
+    </div>
+
+    <div id="private-result" style="display:none">
+      <div class="q-private-status">
+        <div class="q-meta" style="margin-bottom:1.5rem">
+          <span class="q-stat">当前承载人数 <strong id="pv-carriers">2</strong></span>
+          <span class="q-stat">已收到记录 <strong id="pv-records">1</strong> 份</span>
+          <span class="q-stat">等待中 <strong id="pv-days">23</strong> 天</span>
+        </div>
+        <div style="padding:1.5rem;border-left:1px solid var(--breath);margin-bottom:1.5rem">
+          <p style="font-size:0.85rem;color:var(--fade);font-style:italic;line-height:1.9">
+            有 2 个人正在带着你的问题生活。<br>
+            你已经收到 1 份意识变化记录。<br>
+            你的问题仍对新的承载者开放。
+          </p>
+        </div>
+        <p class="section-label" style="margin-bottom:1rem">已收到的记录</p>
+        <div class="record-entry">
+          <div class="record-meta">承载 14 天 · 送回于 2024年11月</div>
+          <p class="record-text">它在我切洋葱的时候出现了。不是因为洋葱让我哭，而是因为我突然意识到我已经很久没有真的在做一件事的时候只是在做那件事。这个问题让我开始注意自己什么时候真正在场，什么时候只是身体在而意识不在。我还没准备好把它还回去。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="records-page">
+  <p class="section-label">记录 · 意识变化的痕迹</p>
+  <h2 class="section-heading">承载者送回的一切</h2>
+  <p class="section-body" style="margin-bottom:2rem">这些是图书馆唯一完全公开的内容。不是答案——是一个问题在另一个意识里留下的真实变化。你不知道它们来自哪个问题，不知道提问者是谁。只是读。</p>
+
+  <div class="filters">
+    <button class="filter-btn active" onclick="filterRecords('all', this)">全部</button>
+    <button class="filter-btn" onclick="filterRecords('short', this)">承载7天内</button>
+    <button class="filter-btn" onclick="filterRecords('long', this)">承载30天以上</button>
+    <button class="filter-btn" onclick="filterRecords('continuing', this)">仍在承载</button>
+  </div>
+
+  <div id="records-list"></div>
+  <div class="pagination" id="r-pagination"></div>
+</section>
+
+<footer>
+  <p class="footer-text">
+    这个图书馆的完整档案存放在
+    <a href="https://github.com" class="footer-link" target="_blank">GitHub</a>
+    上，对所有人开放，不依赖任何单一平台。
+    <br><br>
+    所有内容遵循 CC0 协议——图书馆不拥有任何条目。每一个问题永远属于它的提问者。
+    <br><br>
+    <em>这个图书馆从第一个真实的问题开始存在。规模不重要。真实性是唯一的生长条件。</em>
+  </p>
+</footer>
+
+<script>
+  // ── Mock Data ──────────────────────────────────────────────
+  const QUESTIONS = [
+    { id:1, days:61, carried:0, records:0, time:'清晨', status:'waiting', carrying:0 },
+    { id:2, days:23, carried:2, records:1, time:'深夜', status:'carrying', carrying:1 },
+    { id:3, days:8,  carried:4, records:3, time:'傍晚', status:'witnessed', carrying:0 },
+    { id:4, days:114,carried:1, records:1, time:'深夜', status:'carrying', carrying:1 },
+    { id:5, days:3,  carried:0, records:0, time:'午后', status:'waiting', carrying:0 },
+    { id:6, days:47, carried:3, records:2, time:'清晨', status:'witnessed', carrying:0 },
+    { id:7, days:19, carried:1, records:0, time:'深夜', status:'carrying', carrying:1 },
+    { id:8, days:88, carried:0, records:0, time:'傍晚', status:'waiting', carrying:0 },
+    { id:9, days:31, carried:5, records:4, time:'清晨', status:'witnessed', carrying:0 },
+    { id:10,days:12, carried:2, records:1, time:'深夜', status:'carrying', carrying:2 },
+    { id:11,days:55, carried:1, records:1, time:'午后', status:'witnessed', carrying:0 },
+    { id:12,days:7,  carried:0, records:0, time:'清晨', status:'waiting', carrying:0 },
+    { id:13,days:200,carried:6, records:5, time:'深夜', status:'witnessed', carrying:0 },
+    { id:14,days:4,  carried:1, records:0, time:'傍晚', status:'carrying', carrying:1 },
+    { id:15,days:38, carried:2, records:2, time:'清晨', status:'witnessed', carrying:0 },
+  ];
+
+  const RECORDS = [
+    {
+      id:1, qid:2, days:14, month:'2024年11月', continuing:false,
+      text:'它在我切洋葱的时候出现了。不是因为洋葱让我哭，而是因为我突然意识到我已经很久没有真的在做一件事的时候只是在做那件事。这个问题让我开始注意自己什么时候真正在场，什么时候只是身体在而意识不在。我还没准备好把它还回去。'
+    },
+    {
+      id:2, qid:3, days:31, month:'2024年9月', continuing:false,
+      text:'我在地铁上想起了它。周围全是人，每个人都在看手机。我忽然感到一种奇怪的平静——不是因为找到了答案，而是因为我知道，车厢里至少有一个人也带着一个类似的问题，只是我不知道是谁。'
+    },
+    {
+      id:3, qid:3, days:7, month:'2024年10月', continuing:false,
+      text:'七天里它出现了三次。每次都在我以为自己知道某件事的时候。我把它还回来，但我感觉它已经改变了某个我说不清楚的地方。'
+    },
+    {
+      id:4, qid:9, days:45, month:'2024年7月', continuing:false,
+      text:'我把它带去了父亲的葬礼。不是刻意的，只是它一直在那里。站在人群里，我忽然明白，在场的每一个人此刻都带着一个类似的问题，只是没有人说出来。那是我第一次感到某种不孤单的东西。'
+    },
+    {
+      id:5, qid:13, days:90, month:'2024年3月', continuing:true,
+      text:'我带着它住了三个月了。它改变了我听别人说话的方式——我开始在别人的句子里寻找他们真正想问的问题，而不是他们说出来的那个。这让我变得更慢，更安静，有时候让我显得心不在焉。我不打算还回去。'
+    },
+    {
+      id:6, qid:6, days:21, month:'2024年8月', continuing:false,
+      text:'第三周，它出现在一个完全意想不到的地方——我在修一把坏掉的椅子，怎么都修不好。我坐在地板上，忽然想起这个问题，然后什么都没做，只是坐着。那是很长时间里第一次，我允许自己什么都不做。'
+    },
+    {
+      id:7, qid:4, days:62, month:'2024年5月', continuing:false,
+      text:'六十二天。它没有给我答案。但它给了我一个习惯——每天早上醒来，在拿手机之前，我先问自己一个问题。不是这个问题，是任何一个问题。这个图书馆改变了我开始每一天的方式。'
+    },
+    {
+      id:8, qid:11, days:18, month:'2024年10月', continuing:false,
+      text:'它在雨天最活跃。我不知道为什么。每次下雨，它就从某个地方冒出来，然后我就停下来，不管在做什么。我的同事问我是不是不舒服。我说，不，我只是在想一个问题。'
+    },
+    {
+      id:9, qid:9, days:14, month:'2024年8月', continuing:false,
+      text:'两周。我没有找到答案，但我发现我不再那么需要答案了。不是因为问题不重要——而是因为带着它生活，让我意识到带着它本身就是一种回答方式。'
+    },
+    {
+      id:10, qid:13, days:28, month:'2024年1月', continuing:false,
+      text:'它让我给一个十年没联系的朋友发了消息。不是因为它告诉我要这么做，而是因为带着它的第三周，我意识到我一直在回避某件事，这个问题只是让这件事变得没办法继续回避。'
+    },
+    {
+      id:11, qid:15, days:33, month:'2024年9月', continuing:false,
+      text:'三十三天后我把它还回来了，但我知道它还在。不在问题列表里，在我这里。有些东西一旦被带进意识，就不会真的离开。'
+    },
+    {
+      id:12, qid:3, days:12, month:'2024年11月', continuing:false,
+      text:'第十二天，我梦见了它。不是问题本身，是一个场景——我站在一个空荡荡的房间里，光从窗子进来，我感到某种说不清楚的完整。醒来之后我想，也许这就是它想告诉我的。'
+    },
+  ];
+
+  // ── State ──────────────────────────────────────────────────
+  let qFilter = 'all', qPage = 1, qPerPage = 5;
+  let rFilter = 'all', rPage = 1, rPerPage = 5;
+  let activeTrace = null;
+
+  // ── Questions ──────────────────────────────────────────────
+  function getFilteredQuestions() {
+    let q = [...QUESTIONS];
+    if (qFilter === 'waiting')  q = q.filter(x => x.status === 'waiting');
+    if (qFilter === 'carrying') q = q.filter(x => x.status === 'carrying');
+    if (qFilter === 'witnessed')q = q.filter(x => x.status === 'witnessed');
+    if (qFilter === 'long')     q = q.sort((a,b) => b.days - a.days);
+    return q;
+  }
+
+  function renderQuestions() {
+    const all = getFilteredQuestions();
+    const total = all.length;
+    const pages = Math.ceil(total / qPerPage);
+    const slice = all.slice((qPage-1)*qPerPage, qPage*qPerPage);
+    const list = document.getElementById('question-list');
+
+    if (!slice.length) {
+      list.innerHTML = '<div class="empty-state">这个筛选条件下暂无问题。</div>';
+    } else {
+      list.innerHTML = slice.map(q => {
+        const statusLabel = q.status === 'waiting' ? '等待承载' : q.status === 'carrying' ? '承载中' : '已见证';
+        const recs = RECORDS.filter(r => r.qid === q.id);
+        const recHtml = recs.map(r => `
+          <div class="record-entry">
+            <div class="record-meta">承载 ${r.days} 天 · ${r.month}${r.continuing ? ' · 仍在承载' : ''}</div>
+            <p class="record-text">${r.text}</p>
+          </div>`).join('');
+        return `
+        <div class="q-trace" data-status="${q.status}">
+          <div class="q-meta">
+            <span class="q-stat">等待 <strong>${q.days}</strong> 天</span>
+            <span class="q-stat">承载过 <strong>${q.carried}</strong> 次</span>
+            <span class="q-stat">记录 <strong>${q.records}</strong> 份</span>
+            <span class="q-stat">${q.time}提交</span>
+            <span class="record-tag">${statusLabel}</span>
+            ${q.carrying > 0 ? `<span class="record-tag">当前 ${q.carrying} 人承载中</span>` : ''}
+          </div>
+          <div class="q-actions">
+            ${q.status !== 'witnessed' ? `<button class="carry-btn" onclick="showCarryFlow(this)">承载这个问题</button>` : '<span class="q-note">此问题已完成见证</span>'}
+            ${q.records > 0 ? `<button class="record-btn" onclick="showRecords(this)">读取记录 (${q.records})</button>` : '<span class="q-note" style="margin-left:1rem">还没有记录</span>'}
+          </div>
+          <div class="q-records" style="display:none">${recHtml}</div>
+        </div>`;
+      }).join('');
+    }
+
+    renderPagination('q-pagination', qPage, pages, (p) => { qPage = p; renderQuestions(); });
+  }
+
+  function filterQuestions(f, btn) {
+    qFilter = f; qPage = 1;
+    document.querySelectorAll('#library .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderQuestions();
+  }
+
+  // ── Records ──────────────────────────────────────────────
+  function getFilteredRecords() {
+    let r = [...RECORDS].sort((a,b) => b.id - a.id);
+    if (rFilter === 'short')     r = r.filter(x => x.days <= 7);
+    if (rFilter === 'long')      r = r.filter(x => x.days >= 30);
+    if (rFilter === 'continuing')r = r.filter(x => x.continuing);
+    return r;
+  }
+
+  function renderRecords() {
+    const all = getFilteredRecords();
+    const total = all.length;
+    const pages = Math.ceil(total / rPerPage);
+    const slice = all.slice((rPage-1)*rPerPage, rPage*rPerPage);
+    const list = document.getElementById('records-list');
+
+    if (!slice.length) {
+      list.innerHTML = '<div class="empty-state">这个筛选条件下暂无记录。</div>';
+    } else {
+      list.innerHTML = slice.map(r => `
+        <div class="record-full">
+          <div class="record-full-meta">
+            <span class="q-stat">承载 <strong>${r.days}</strong> 天</span>
+            <span class="q-stat">${r.month}</span>
+            ${r.continuing ? '<span class="record-tag">仍在承载</span>' : ''}
+          </div>
+          <p class="record-full-text">${r.text}</p>
+        </div>`).join('');
+    }
+
+    renderPagination('r-pagination', rPage, pages, (p) => { rPage = p; renderRecords(); });
+  }
+
+  function filterRecords(f, btn) {
+    rFilter = f; rPage = 1;
+    document.querySelectorAll('#records-page .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderRecords();
+  }
+
+  // ── Pagination ──────────────────────────────────────────
+  function renderPagination(id, current, total, onChange) {
+    const el = document.getElementById(id);
+    if (total <= 1) { el.innerHTML = ''; return; }
+    let html = `<button class="page-btn" ${current===1?'disabled':''} onclick="(${onChange})(${current-1})">← 上一页</button>`;
+    html += `<span class="page-info">${current} / ${total}</span>`;
+    html += `<button class="page-btn" ${current===total?'disabled':''} onclick="(${onChange})(${current+1})">下一页 →</button>`;
+    el.innerHTML = html;
+  }
+
+  // ── Carry flow ──────────────────────────────────────────
+  function showCarryFlow(btn) {
+    activeTrace = btn.closest('.q-trace');
+    const overlay = document.getElementById('carry-overlay');
+    overlay.style.display = 'block';
+    overlay.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function confirmCarry() {
+    document.getElementById('carry-overlay').style.display = 'none';
+    document.getElementById('carry-confirmed').style.display = 'block';
+    if (activeTrace) {
+      const cb = activeTrace.querySelector('.carry-btn');
+      if (cb) { cb.disabled = true; cb.textContent = '承载中'; cb.style.opacity = '0.4'; }
+    }
+  }
+
+  function showRecords(btn) {
+    const trace = btn.closest('.q-trace');
+    const records = trace.querySelector('.q-records');
+    const visible = records.style.display !== 'none';
+    records.style.display = visible ? 'none' : 'block';
+    btn.textContent = visible
+      ? btn.textContent.replace('隐藏', '读取')
+      : btn.textContent.replace('读取', '隐藏');
+  }
+
+  // ── Submit ──────────────────────────────────────────────
+  function handleSubmit() {
+    const q = document.getElementById('question-input').value.trim();
+    if (!q) return;
+    document.getElementById('form-state').style.display = 'none';
+    document.getElementById('confirmation').classList.add('visible');
+    const token = 'lsq_' + Array.from(crypto.getRandomValues(new Uint8Array(18)))
+      .map(b => b.toString(16).padStart(2,'0')).join('');
+    document.getElementById('private-token').textContent = token;
+  }
+
+  function showPrivateView() {
+    const token = document.getElementById('token-input').value.trim();
+    if (!token) return;
+    document.getElementById('private-form').style.display = 'none';
+    document.getElementById('private-result').style.display = 'block';
+  }
+
+  // ── Init ────────────────────────────────────────────────
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('section').forEach(s => observer.observe(s));
+
+  renderQuestions();
+  renderRecords();
+</script>
+
+</body>
+</html>
